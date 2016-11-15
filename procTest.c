@@ -4,8 +4,8 @@
 #include <linux/kernel.h> 	//This is a kernel module.
 #include <linux/proc_fs.h> 	//Since we are using proc file system.
 #include<linux/sched.h>		//For scheduling.
-#include <asm/uaccess.h>	//page default.
-#include <linux/slab.h>		//
+#include <asm/uaccess.h>	//copy_to_user(), copy_from_user().
+#include <linux/slab.h>		//for kmalloc() and kfree()
 
 //global int variable of length and tmp.
 //len: the number of bytes in msg. (proc entry)
@@ -13,6 +13,7 @@
 int len,temp;
 
 //String buffer in the kernel space
+//msg = char[10];
 char *msg;
 
 //transfer data from kernel space to user space.
@@ -77,6 +78,8 @@ void create_new_proc_entry(void)
 //Here we pass the file_operations struct toe create the proc entry.
 //NULL: means it's proc/hello 
 proc_create("hello",0,NULL,&proc_fops);
+
+//GFP_KERNEL: most reliable, will sleep or swap if out of memory.
 msg=kmalloc(10*sizeof(char),GFP_KERNEL);
 }
 
@@ -88,7 +91,7 @@ int proc_init (void) {
 
 void proc_cleanup(void) {
  remove_proc_entry("hello",NULL);
- kfree(msg);
+ kfree(msg); //free the dynamically allocated memory.
 }
 
 MODULE_LICENSE("GPL"); 
