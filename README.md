@@ -19,4 +19,12 @@ Nov, 30, 2016
 6) ping www.google.com (should print out network info again) 
 
 7) sudo rmmod BlockAllTrafficOnDemand (inject the module) 
-   
+
+
+Dec. 4, 2016
+
+*How to monitor network traffic*
+
+1) sudo insmod BlockAllTrafficOnDemand.ko (insert the module)
+
+2) write the IPv4 address you want to monitor: eg. echo "172.16.254.1" | sudo tee /proc/monitor
