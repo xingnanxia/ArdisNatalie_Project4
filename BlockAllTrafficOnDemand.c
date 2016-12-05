@@ -15,6 +15,9 @@
 #include <asm/uaccess.h>	//copy_to_user(), copy_from_user().
 #include <linux/slab.h>		//for kmalloc() and kfree()
 
+#include <linux/skbuff.h>  
+#include <linux/ip.h>         // for IP header
+
 #define _KERNEL_
 
 //initialize to unblock
@@ -80,6 +83,8 @@ ssize_t write_proc1(struct file *filp,const char *buf,size_t count,loff_t *offp)
 	//Update len and temp for msg.
 	len1=count;
 	temp1=len1;
+
+
 
 	//return the number of bytes copied.
 	return count;

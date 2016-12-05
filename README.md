@@ -27,4 +27,7 @@ Dec. 4, 2016
 
 1) sudo insmod BlockAllTrafficOnDemand.ko (insert the module)
 
-2) write the IPv4 address you want to monitor: eg. echo "172.16.254.1" | sudo tee /proc/monitor
+2) in order to activate ipt_LOG for IPv4 (=printk-based logging), type
+   echo "ipt_LOG" > /proc/sys/net/netfilter/nf_log/2
+
+3) write the IPv4 address you want to monitor: eg. echo "172.16.254.1" | sudo tee /proc/monitor
