@@ -23,6 +23,14 @@
 //initialize to unblock
 bool block = false;
 
+
+// get the source and destination IP address of a packet caught in hook_func_2
+struct iphdr *ip_header = (struct iphdr *) skb_network_header(skb);
+unsigned int src_ip = (unsigned int) ip_header -> saddr;
+unsigned int dest_ip = (unsigned int) ip_header->daddr;
+
+
+
 static struct nf_hook_ops nfho; //struct holding set of hook function options
 
 //function to be called by hook
@@ -38,6 +46,13 @@ unsigned int hook_func(unsigned int hooknum, struct sk_buff **skb, const struct 
 	}
 }
 
+
+// get source and destination IP address of a packet caught in the hook function
+unsigned int hook_func_2(unsigned int hooknum, struct sk_buff *skb, const struct net_device *in, const struct net_device *out, int (*okfn) (struct sk_buff*)) {
+	// call NF_QUEUE or NF_REPEAT?
+	return NF_QUEUE; // queue for userspace handling
+
+}
 
 //global int variable of length and tmp.
 //len: the number of bytes in msg. (proc entry)
