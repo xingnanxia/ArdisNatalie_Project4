@@ -23,6 +23,9 @@
 //initialize to unblock
 bool block = false;
 
+// initialize to monitor
+bool monitor = false;
+
 
 static struct nf_hook_ops nfho; //struct holding set of hook function options
 
@@ -43,20 +46,27 @@ unsigned int hook_func(unsigned int hooknum, struct sk_buff **skb, const struct 
 // get source and destination IP address of a packet caught in the hook function
 unsigned int hook_func_2(unsigned int hooknum, struct sk_buff *skb, const struct net_device *in, const struct net_device *out, int (*okfn) (struct sk_buff*)) {
 	
-	// get the source and destination IP address of a packet caught in hook_func_2
-	struct iphdr *ip_header = (struct iphdr *) skb_network_header(skb);
-	unsigned int src_ip = (unsigned int) ip_header -> saddr;
-	unsigned int dest_ip = (unsigned int) ip_header -> daddr;
+	if (monitor) {
+		// get the source and destination IP address of a packet caught in hook_func_2
+		struct iphdr *ip_header = (struct iphdr *) skb_network_header(skb);
+		unsigned int src_ip = (unsigned int) ip_header -> saddr;
+		unsigned int dest_ip = (unsigned int) ip_header -> daddr;
 
-	char source[16];
-	snprintf(source, 16, "%pI4", &ip_header -> saddr);
+		// convert the source and destination IP addresses to character buffers
+		char source[16];
+		snprintf(source, 16, "%pI4", &src_ip);
+		char dest[16];
+		snprintf(dest, 16, "%pI4", &dest_ip);
 
-	// compare the ip address from the packet with user input
-	if (source == userInput) {
-		// if it is the same, then print the number of bytes using printk
-	}  
+		// compare the ip address from the packet with user input
+		if (source == userInput) {
+			// if it is the same, output 
+			// address, timestamp, and size
+			// to a file
+		} 	
 
-	
+	}	
+
 	return NF_ACCEPT;
 
 }
