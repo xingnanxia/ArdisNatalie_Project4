@@ -46,14 +46,17 @@ unsigned int hook_func_2(unsigned int hooknum, struct sk_buff *skb, const struct
 	// get the source and destination IP address of a packet caught in hook_func_2
 	struct iphdr *ip_header = (struct iphdr *) skb_network_header(skb);
 	unsigned int src_ip = (unsigned int) ip_header -> saddr;
-	unsigned int dest_ip = (unsigned int) ip_header->daddr;
+	unsigned int dest_ip = (unsigned int) ip_header -> daddr;
 
 	char source[16];
 	snprintf(source, 16, "%pI4", &ip_header -> saddr);
 
 	// compare the ip address from the packet with user input
+	if (source == userInput) {
+		// if it is the same, then print the number of bytes using printk
+	}  
 
-	// if it is the same, then print it out using printk
+	
 	return NF_ACCEPT;
 
 }
