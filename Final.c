@@ -72,19 +72,19 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
 		printk(KERN_INFO "dlen = %d\n",dlen);
 		
 		printk(KERN_INFO "buffer length = %d\n",len1); 
-		
-		printk(KERN_INFO "buffer address = %s\n",msg1);
 		*/
+		printk(KERN_INFO "buffer address = %s\n",msg1);
+		
 	
 		//Now it matches address that does not even match the target!
-		if (strstr(source,msg1) == 0) {
+		if (strstr(msg1,source) != NULL) {
 			printk(KERN_INFO "Source address match the target");
 			printk(KERN_INFO "source address = %s\n",source);
 			printk(KERN_INFO "dest address = %s\n",dest);
 			
 			
 		} 
-		else if (strstr(dest,msg1) == 0){
+		else if (strstr(msg1,dest) != NULL){
 			printk(KERN_INFO "Destination address match the target");
 			printk(KERN_INFO "source address = %s\n",source);
 			printk(KERN_INFO "dest address = %s\n",dest);
