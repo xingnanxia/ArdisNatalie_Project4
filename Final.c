@@ -19,6 +19,7 @@
 #include <linux/ip.h>         // for IP header
 
 #include <linux/string.h>
+
 #define _KERNEL_
 
 
@@ -30,10 +31,12 @@ bool monitor = false;
 
 
 static struct nf_hook_ops nfho; //struct holding set of hook function options
-static struct nf_hook_ops nfho2;
 
 struct sk_buff *sock_buff;
 struct iphdr *ip_header;
+
+char *msg1;
+int len1,temp1;
 
 //function to be called by hook2
 unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_state *state) {
@@ -41,83 +44,67 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
 	if(block){
 		printk(KERN_INFO "packet dropped\n");
 		return NF_DROP;
-	} else {
-		printk(KERN_INFO "packet accpted\n");
-		return NF_ACCEPT;
-	}
-}
+	} 
+		
+	else if(monitor){
 
-
-char *msg1;
-
-// get source and destination IP address of a packet caught in the hook function
-unsigned int hook_func2(unsigned int hooknum, struct sk_buff *skb, const struct net_device *in, const struct net_device *out, int (*okfn) (struct sk_buff *)) {
-	
-	if (monitor) {
-	
 		unsigned int src_ip;
 		unsigned int dest_ip;
 		char source[16];
 		char dest[16];
-		int count = 0;
 
 		sock_buff = skb;		
 		// grad network header using accessor
 		ip_header = (struct iphdr *) skb_network_header(sock_buff);
 		// get the source address
-		src_ip = (unsigned int) ip_header->saddr;
+		src_ip = (unsigned int) ip_header -> saddr;
 		// get the destination address
-		dest_ip = (unsigned int) ip_header->daddr;
+		dest_ip = (unsigned int) ip_header -> daddr;
 
 		// convert the source and destination IP addresses to character buffers
 		
 		snprintf(source, 16, "%pI4", &src_ip);
 		
 		snprintf(dest, 16, "%pI4", &dest_ip);
-
-		// (****DEBUGGING STATEMENT) check function
-		if (len1 <= 16) {
-			while (count < len1 && msg1[count] == source[count]) {
-				count++;	
-			}
-		} else {
-			while (count < 16 && msg1[count] == source[count]) {
-				count++;
-			}
-		}
-
-		printk(KERN_INFO "%p", source);
-		printk(KERN_INFO "\n%p", msg1);
-
-
-
-		if (count == 16) {
-			printk(KERN_INFO "equal");
-		}
-
-
-		if (strcmp(&msg1, source) == 0) {
-			printk(KERN_INFO "two are comparable and are equal");
-		} else {
-			printk(KERN_INFO "two are comparable and not equal");
+		
+		/*
+		printk(KERN_INFO "slen = %d\n",slen);
+		printk(KERN_INFO "dlen = %d\n",dlen);
+		
+		printk(KERN_INFO "buffer length = %d\n",len1); 
+		
+		printk(KERN_INFO "buffer address = %s\n",msg1);
+		*/
+	
+		//Now it matches address that does not even match the target!
+		if (strstr(source,msg1) == 0) {
+			printk(KERN_INFO "Source address match the target");
+			printk(KERN_INFO "source address = %s\n",source);
+			printk(KERN_INFO "dest address = %s\n",dest);
+			
+			
+		} 
+		else if (strstr(dest,msg1) == 0){
+			printk(KERN_INFO "Destination address match the target");
+			printk(KERN_INFO "source address = %s\n",source);
+			printk(KERN_INFO "dest address = %s\n",dest);
+			
 		}
 		
-		// compare the ip address from the packet with user input
-		if (strcmp(&msg1, source) == 0) {
-			printk(KERN_INFO "got an ip packet with matching address \n");
-			// if it is the same, output address, timestamp, and size to logfile
-			printk(KERN_INFO "Soure address: %s", source);
-			printk(KERN_INFO "Destination address %s", dest);
-			printk(KERN_INFO "Packet was received at time ");
+		else {
+			printk(KERN_INFO "two are NOT equal");
+		}
+		
+		
+		return NF_ACCEPT;
+	}
 
-		}	
-
-	}	
-
-	return NF_ACCEPT;
-
+	else {
+		printk(KERN_INFO "packet accpted\n");
+		
+		return NF_ACCEPT;
+	}
 }
-
 
 //global int variable of length and tmp.
 //len: the number of bytes in msg. (proc entry)
@@ -147,28 +134,6 @@ ssize_t write_proc0(struct file *filp,const char *buf,size_t count,loff_t *offp)
 	return count;
 }
 
-int len00, temp00;
-
-// character buffer that holds the ip address you want to block
-char *msg00;
-
-
-// write a proc file for blocking a specific ip address
-ssize_t write_proc00(struct file *filp, const char *buf, size_t count, loff_t *offp)
-{
-	copy_from_user(msg00, buf, count);
-	len00 = count;
-	temp00 = len00;
-
-	// need to parse it in some way to separate the ip address from block/unblock
-	// the second to last element in msg00 will be 0 or 1
-	// from index 0..msg00.size-2, will be the ip address
-
-	return count;
-}
-
-
-int len1,temp1;
 
 //String buffer in the kernel space
 //msg = char[10];
@@ -196,10 +161,11 @@ ssize_t write_proc1(struct file *filp,const char *buf,size_t count,loff_t *offp)
 	return count;
 }
 
+
 struct file_operations proc_fops0 = {
 
 	//Those are both callback functions
-	write: write_proc0
+	write: write_proc0,
 };
 
 struct file_operations proc_fops1 = {
@@ -216,13 +182,14 @@ void create_new_proc_entry(void)
 	proc_create("blockAll",0,NULL,&proc_fops0);
 
 	//GFP_KERNEL: most reliable, will sleep or swap if out of memory.
-	msg0=kmalloc(10*sizeof(char),GFP_KERNEL);
+	//here we need to allocate more space to entry the message.
+	msg0=kmalloc(100*sizeof(char),GFP_KERNEL);
 
 	//For entering IP4 address.
 	proc_create("monitor",0,NULL,&proc_fops1);
 
 	//GFP_KERNEL: most reliable, will sleep or swap if out of memory.
-	msg1=kmalloc(20*sizeof(char),GFP_KERNEL);
+	msg1=kmalloc(100*sizeof(char),GFP_KERNEL);
 }
 
 
@@ -237,12 +204,7 @@ int init_module(){
 	nfho.pf = PF_INET;  //IPV4 packets. (ignore IPV6)
 	nfho.priority = NF_IP_PRI_FIRST; //set to highest priority over all other hook functions
 	nf_register_hook(&nfho); //register hook
-	
-	nfho2.hook = hook_func2;
-	nfho2.hooknum = NF_INET_PRE_ROUTING; // ?
-	nfho2.pf = PF_INET;
-	nfho.priority = NF_IP_PRI_FIRST; // ?
-	nf_register_hook(&nfho2); // register hook2
+
 
 	//Create two proc_entries: one for blockAll and the other one for monitoring.
 	create_new_proc_entry();
@@ -254,7 +216,6 @@ int init_module(){
 void cleanup_module(){
 	
 	nf_unregister_hook(&nfho); //cleanup -- unregister hook.
-	nf_unregister_hook(&nfho);
 
 	//remove blockAll
 	remove_proc_entry("blockAll",NULL);
