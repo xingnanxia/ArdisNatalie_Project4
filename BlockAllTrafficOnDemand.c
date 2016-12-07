@@ -142,6 +142,8 @@ ssize_t write_proc1(struct file *filp,const char *buf,size_t count,loff_t *offp)
 	   monitor = !monitor;	
 	}
 
+	//***check to make sure the character buffers are comparable
+
 	//return the number of bytes copied.
 	return count;
 }
@@ -158,7 +160,7 @@ ssize_t write_proc2(struct file *filp, const char *buf, size_t count, loff_t *of
 
 // read from the proc file containing the monitor info
 // that was tracked
-ssize_t read_proc2(struct file *filp, const char *buf, size_t count, loff_t *offp)
+/*ssize_t read_proc2(struct file *filp, const char *buf, size_t count, loff_t *offp)
 {
 	if (count>temp) {
 	    count == temp;
@@ -171,7 +173,7 @@ ssize_t read_proc2(struct file *filp, const char *buf, size_t count, loff_t *off
 	}
 
 	return count;
-}
+}*/
 
 
 struct file_operations proc_fops0 = {
