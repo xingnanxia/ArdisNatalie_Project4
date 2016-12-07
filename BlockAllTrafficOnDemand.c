@@ -46,6 +46,8 @@ unsigned int hook_func(unsigned int hooknum, struct sk_buff **skb, const struct 
 }
 
 
+char *msg1;
+
 // get source and destination IP address of a packet caught in the hook function
 unsigned int hook_func_2(unsigned int hooknum, struct sk_buff **skb, const struct net_device *in, const struct net_device *out, int (*okfn) (struct sk_buff *)) {
 	
@@ -64,6 +66,13 @@ unsigned int hook_func_2(unsigned int hooknum, struct sk_buff **skb, const struc
 		char dest[16];
 		snprintf(dest, 16, "%pI4", &dest_ip);
 
+		// (****DEBUGGING STATEMENT) check function
+		if (source == &msg1) {
+			printk(KERN_INFO "two are comparable and are equal")
+		} else if (source != &msg1) {
+			printk(KERN_INFO "two are comparable and not equal")
+		}
+		
 		// compare the ip address from the packet with user input
 		if (source == &msg1) {
 			printk(KERN_INFO "got an ip packet with matching address \n");
@@ -131,7 +140,7 @@ int len1,temp1;
 
 //String buffer in the kernel space
 //msg = char[10];
-char *msg1;
+
 
 ssize_t write_proc1(struct file *filp,const char *buf,size_t count,loff_t *offp)
 {
