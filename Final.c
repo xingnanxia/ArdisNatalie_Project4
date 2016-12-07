@@ -31,7 +31,7 @@ bool monitor = false;
 static struct nf_hook_ops nfho; //struct holding set of hook function options
 static struct nf_hook_ops nfho2;
 
-struct sk_buff *sock_buffer;
+struct sk_buff *sock_buff;
 struct iphdr *ip_header;
 
 //function to be called by hook2
@@ -50,28 +50,39 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
 char *msg1;
 
 // get source and destination IP address of a packet caught in the hook function
-/*unsigned int hook_func_2(unsigned int hooknum, struct sk_buff **skb, const struct net_device *in, const struct net_device *out, int (*okfn) (struct sk_buff *)) {
+unsigned int hook_func2(unsigned int hooknum, struct sk_buff *skb, const struct net_device *in, const struct net_device *out, int (*okfn) (struct sk_buff *)) {
 	
 	if (monitor) {
-		sock_buff = *skb;		
+	
+		unsigned int src_ip;
+		unsigned int dest_ip;
+		char source[16];
+		char dest[16];
+
+		sock_buff = skb;		
 		// grad network header using accessor
 		ip_header = (struct iphdr *) skb_network_header(sock_buff);
 		// get the source address
-		unsigned int src_ip = (unsigned int) ip_header -> saddr;
+		src_ip = (unsigned int) ip_header -> saddr;
 		// get the destination address
-		unsigned int dest_ip = (unsigned int) ip_header -> daddr;
+		dest_ip = (unsigned int) ip_header -> daddr;
 
 		// convert the source and destination IP addresses to character buffers
-		char source[16];
+		
 		snprintf(source, 16, "%pI4", &src_ip);
-		char dest[16];
+		
 		snprintf(dest, 16, "%pI4", &dest_ip);
+
+
+		printk(KERN_INFO "%s\n",source);
+		printk(KERN_INFO "%s\n",dest);
+
 
 		// (****DEBUGGING STATEMENT) check function
 		if (source == &msg1) {
-			printk(KERN_INFO "two are comparable and are equal")
+			printk(KERN_INFO "two are comparable and are equal");
 		} else if (source != &msg1) {
-			printk(KERN_INFO "two are comparable and not equal")
+			printk(KERN_INFO "two are comparable and not equal");
 		}
 		
 		// compare the ip address from the packet with user input
@@ -90,7 +101,7 @@ char *msg1;
 
 	return NF_ACCEPT;
 
-}*/
+}
 
 //global int variable of length and tmp.
 //len: the number of bytes in msg. (proc entry)
@@ -242,11 +253,11 @@ int init_module(){
 	nfho.priority = NF_IP_PRI_FIRST; //set to highest priority over all other hook functions
 	nf_register_hook(&nfho); //register hook
 	
-	nfho2.hook = hook_func2
+	nfho2.hook = hook_func2;
 	nfho2.hooknum = NF_INET_PRE_ROUTING; // ?
 	nfho2.pf = PF_INET;
 	nfho.priority = NF_IP_PRI_FIRST; // ?
-	nf_register_hook2(&nfho2); // register hook2
+	nf_register_hook(&nfho2); // register hook2
 
 	//Create two proc_entries: one for blockAll and the other one for monitoring.
 	create_new_proc_entry();
@@ -258,7 +269,7 @@ int init_module(){
 void cleanup_module(){
 	
 	nf_unregister_hook(&nfho); //cleanup -- unregister hook.
-	nf_unregister_hook2(&nfho);
+	nf_unregister_hook(&nfho);
 
 	//remove blockAll
 	remove_proc_entry("blockAll",NULL);
