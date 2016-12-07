@@ -18,6 +18,7 @@
 #include <linux/skbuff.h>  
 #include <linux/ip.h>         // for IP header
 
+#include <linux/string.h>
 #define _KERNEL_
 
 
@@ -58,14 +59,15 @@ unsigned int hook_func2(unsigned int hooknum, struct sk_buff *skb, const struct 
 		unsigned int dest_ip;
 		char source[16];
 		char dest[16];
+		int count = 0;
 
 		sock_buff = skb;		
 		// grad network header using accessor
 		ip_header = (struct iphdr *) skb_network_header(sock_buff);
 		// get the source address
-		src_ip = (unsigned int) ip_header -> saddr;
+		src_ip = (unsigned int) ip_header->saddr;
 		// get the destination address
-		dest_ip = (unsigned int) ip_header -> daddr;
+		dest_ip = (unsigned int) ip_header->daddr;
 
 		// convert the source and destination IP addresses to character buffers
 		
@@ -73,28 +75,41 @@ unsigned int hook_func2(unsigned int hooknum, struct sk_buff *skb, const struct 
 		
 		snprintf(dest, 16, "%pI4", &dest_ip);
 
-
-		printk(KERN_INFO "%s\n",source);
-		printk(KERN_INFO "%s\n",dest);
-
-
 		// (****DEBUGGING STATEMENT) check function
-		if (source == &msg1) {
+		if (len1 <= 16) {
+			while (count < len1 && msg1[count] == source[count]) {
+				count++;	
+			}
+		} else {
+			while (count < 16 && msg1[count] == source[count]) {
+				count++;
+			}
+		}
+
+		printk(KERN_INFO "%p", source);
+		printk(KERN_INFO "\n%p", msg1);
+
+
+
+		if (count == 16) {
+			printk(KERN_INFO "equal");
+		}
+
+
+		if (strcmp(&msg1, source) == 0) {
 			printk(KERN_INFO "two are comparable and are equal");
-		} else if (source != &msg1) {
+		} else {
 			printk(KERN_INFO "two are comparable and not equal");
 		}
 		
 		// compare the ip address from the packet with user input
-		if (source == &msg1) {
+		if (strcmp(&msg1, source) == 0) {
 			printk(KERN_INFO "got an ip packet with matching address \n");
-			// if it is the same, output address, timestamp, and size to a procfile
-			// print 1. source[16]
-			// print 2. the time that the packet came to the hook
-			// print 3. size of packet
-// there's a field called "total length" of the entire IP packet in bytes.
-// subtract the number of 32-bit words that make up the header (Header Length field in the IP header; IHL)
-// can get the size of TCP packet
+			// if it is the same, output address, timestamp, and size to logfile
+			printk(KERN_INFO "Soure address: %s", source);
+			printk(KERN_INFO "Destination address %s", dest);
+			printk(KERN_INFO "Packet was received at time ");
+
 		}	
 
 	}	
@@ -102,6 +117,7 @@ unsigned int hook_func2(unsigned int hooknum, struct sk_buff *skb, const struct 
 	return NF_ACCEPT;
 
 }
+
 
 //global int variable of length and tmp.
 //len: the number of bytes in msg. (proc entry)
@@ -180,41 +196,10 @@ ssize_t write_proc1(struct file *filp,const char *buf,size_t count,loff_t *offp)
 	return count;
 }
 
-
-// writing to a proc file the monitor info
-// or instead of using a proc file, use syslog
-
-
-ssize_t write_proc2(struct file *filp, const char *buf, size_t count, loff_t *offp)
-{
-	// write the ip address, timestamp, and size to a procfile
-	
-
-}
-
-
-// read from the proc file containing the monitor info
-// that was tracked
-/*ssize_t read_proc2(struct file *filp, const char *buf, size_t count, loff_t *offp)
-{
-	if (count>temp) {
-	    count == temp;
-	}
-	temp = temp - count;
-	copy_to_user(buf, msg2, count);	
-	
-	if (count==0) {
-	   temp = len;
-	}
-
-	return count;
-}*/
-
-
 struct file_operations proc_fops0 = {
 
 	//Those are both callback functions
-	write: write_proc0,
+	write: write_proc0
 };
 
 struct file_operations proc_fops1 = {
