@@ -20,6 +20,7 @@
 
 #define _KERNEL_
 
+
 //initialize to unblock
 bool block = false;
 
@@ -29,11 +30,10 @@ bool monitor = false;
 
 static struct nf_hook_ops nfho; //struct holding set of hook function options
 
-//function to be called by hook
+//function to be called by hook2
 unsigned int hook_func(unsigned int hooknum, struct sk_buff **skb, const struct net_device *in, const struct net_device *out, int (*okfn)(struct sk_buff*)){
 	
 	if(block){
-
 		printk(KERN_INFO "packet dropped\n");
 		return NF_DROP;
 	} else {
@@ -59,11 +59,11 @@ unsigned int hook_func_2(unsigned int hooknum, struct sk_buff *skb, const struct
 		snprintf(dest, 16, "%pI4", &dest_ip);
 
 		// compare the ip address from the packet with user input
-		if (source == userInput) {
+		if (source == &msg1) {
 			// if it is the same, output 
 			// address, timestamp, and size
-			// to a file
-		} 	
+			// to a procfile
+		}	
 
 	}	
 
@@ -99,6 +99,26 @@ ssize_t write_proc0(struct file *filp,const char *buf,size_t count,loff_t *offp)
 	return count;
 }
 
+int len00, temp00;
+
+// character buffer that holds the ip address you want to block
+char *msg00;
+
+
+// write a proc file for blocking a specific ip address
+ssize_t write_proc00(struct file *filp, const char *buf, size_t count, loff_t *offp)
+{
+	copy_from_user(msg00, buf, count);
+	len00 = count;
+	temp00 = len00;
+
+	// need to parse it in some way to separate the ip address from block/unblock
+	// the second to last element in msg00 will be 0 or 1
+	// from index 0..msg00.size-2, will be the ip address
+
+	return count;
+}
+
 
 int len1,temp1;
 
@@ -111,17 +131,47 @@ ssize_t write_proc1(struct file *filp,const char *buf,size_t count,loff_t *offp)
 
 	//copy the data from the buffer to msg (in the proc entry).
 	copy_from_user(msg1,buf,count);
+	// msg1 has already been modified, so you don't need to return it, do you?
 
 	//Update len and temp for msg.
 	len1=count;
 	temp1=len1;
 
-
+	// redundant?
+	if (count > 0) {
+	   monitor = !monitor;	
+	}
 
 	//return the number of bytes copied.
 	return count;
 }
 
+
+// writing to a proc file the monitor info
+ssize_t write_proc2(struct file *filp, const char *buf, size_t count, loff_t *offp)
+{
+	// write the ip address, timestamp, and size to a procfile
+	
+
+}
+
+
+// read from the proc file containing the monitor info
+// that was tracked
+ssize_t read_proc2(struct file *filp, const char *buf, size_t count, loff_t *offp)
+{
+	if (count>temp) {
+	    count == temp;
+	}
+	temp = temp - count;
+	copy_to_user(buf, msg2, count);	
+	
+	if (count==0) {
+	   temp = len;
+	}
+
+	return count;
+}
 
 
 struct file_operations proc_fops0 = {
@@ -165,6 +215,7 @@ int init_module(){
 	nfho.pf = PF_INET;  //IPV4 packets. (ignore IPV6)
 	nfho.priority = NF_IP_PRI_FIRST; //set to highest priority over all other hook functions
 	nf_register_hook(&nfho); //register hook
+	nf_register_hook2(&nfho); // register hook2
 
 	//Create two proc_entries: one for blockAll and the other one for monitoring.
 	create_new_proc_entry();
@@ -176,6 +227,7 @@ int init_module(){
 void cleanup_module(){
 	
 	nf_unregister_hook(&nfho); //cleanup -- unregister hook.
+	nf_unregister_hook2(&nfho);
 
 	//remove blockAll
 	remove_proc_entry("blockAll",NULL);
