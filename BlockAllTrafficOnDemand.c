@@ -30,6 +30,9 @@ bool monitor = false;
 
 static struct nf_hook_ops nfho; //struct holding set of hook function options
 
+struct sk_buff *sock_buffer;
+struct iphdr *ip_header;
+
 //function to be called by hook2
 unsigned int hook_func(unsigned int hooknum, struct sk_buff **skb, const struct net_device *in, const struct net_device *out, int (*okfn)(struct sk_buff*)){
 	
@@ -44,12 +47,15 @@ unsigned int hook_func(unsigned int hooknum, struct sk_buff **skb, const struct 
 
 
 // get source and destination IP address of a packet caught in the hook function
-unsigned int hook_func_2(unsigned int hooknum, struct sk_buff *skb, const struct net_device *in, const struct net_device *out, int (*okfn) (struct sk_buff*)) {
+unsigned int hook_func_2(unsigned int hooknum, struct sk_buff **skb, const struct net_device *in, const struct net_device *out, int (*okfn) (struct sk_buff *)) {
 	
 	if (monitor) {
-		// get the source and destination IP address of a packet caught in hook_func_2
-		struct iphdr *ip_header = (struct iphdr *) skb_network_header(skb);
+		sock_buff = *skb;		
+		// grad network header using accessor
+		ip_header = (struct iphdr *) skb_network_header(skb);
+		// get the source address
 		unsigned int src_ip = (unsigned int) ip_header -> saddr;
+		// get the destination address
 		unsigned int dest_ip = (unsigned int) ip_header -> daddr;
 
 		// convert the source and destination IP addresses to character buffers
@@ -60,7 +66,8 @@ unsigned int hook_func_2(unsigned int hooknum, struct sk_buff *skb, const struct
 
 		// compare the ip address from the packet with user input
 		if (source == &msg1) {
-			// if it is the same, output 
+			printk(KERN_INFO "got an ip packet with matching address \n");
+			// if it is the same, output
 			// address, timestamp, and size
 			// to a procfile
 		}	
@@ -150,6 +157,9 @@ ssize_t write_proc1(struct file *filp,const char *buf,size_t count,loff_t *offp)
 
 
 // writing to a proc file the monitor info
+// or instead of using a proc file, use syslog
+
+
 ssize_t write_proc2(struct file *filp, const char *buf, size_t count, loff_t *offp)
 {
 	// write the ip address, timestamp, and size to a procfile
